@@ -6,9 +6,9 @@ app.get("/", (request, response) => {
   response.send('Hello World!');
 });
 
-app.get("/test", (request, response) => {
-  response.send('pass!');
-});
+// app.get("/test", (request, response) => {
+//   response.send('pass!');
+// });
 
 app.get("/user", (request, response) => {
   response.send({ name: process.env.NAME, age: process.env.AGE });
