@@ -49,8 +49,11 @@ app.post("/api/users", jsonParser, function (req, res) {
         if (!req.body) return res.sendStatus(400);
 
         const userName = req.body.name;
+        const userLastName = req.body.last_name;
         const userAge = req.body.age;
-        const user = { name: userName, age: userAge };
+        const userCourse = req.body.course;
+        const userAvg = req.body.avg;
+        const user = { name: userName, last_name: userLastName, age: userAge, course: userCourse, avg: userAvg };
 
         const collection = req.app.locals.collection;
         collection.insertOne(user, function (err, result) {
@@ -78,10 +81,13 @@ app.put("/api/users", jsonParser, function (req, res) {
         if (!req.body) return res.sendStatus(400);
         const id = new objectId(req.body.id);
         const userName = req.body.name;
+        const userLastName = req.body.last_name;
         const userAge = req.body.age;
+        const userCourse = req.body.course;
+        const userAvg = req.body.avg;
 
         const collection = req.app.locals.collection;
-        collection.findOneAndUpdate({ _id: id }, { $set: { age: userAge, name: userName } },
+        collection.findOneAndUpdate({ _id: id }, { $set: { name: userName, last_name: userLastName, age: userAge, course: userCourse, avg: userAvg } },
                 { returnOriginal: false }, function (err, result) {
 
                         if (err) return console.log(err);
