@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width" />
+
+    <title>Список студентів</title>
+
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+      crossorigin="anonymous"
+    />
+
+    <style>
+      body {
+        background: lightgray;
+      }
+      table {
+        background: wheat;
+        border: 2px solid black;
+      }
+      .userForm {
+        display: flex;
+        padding: 20px 20px 20px 20px;
+        flex-direction: column;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <form name="userForm" class="userForm">
+      <h2 style="display: ''">Список студентів</h2>
+      <input type="hidden" name="id" value="0" />
+      <div class="form-group">
+        <label for="name">Ім'я:</label>
+        <input class="form-control" name="name" />
+      </div>
+
+      <div class="form-group">
+        <label for="last_name">Прізвище:</label>
+        <input class="form-control" name="last_name" />
+      </div>
+
+      <div class="form-group">
+        <label for="age">Вік:</label>
+        <input class="form-control" name="age" />
+      </div>
+
+      <div class="form-group">
+        <label for="course">Курс:</label>
+        <input class="form-control" name="course" />
+      </div>
+
+      <div class="form-group">
+        <label for="avg">Середній бал:</label>
+        <input class="form-control" name="avg" />
+      </div>
+
+      <div class="form-group">
+        <label for="department">Кафедра:</label>
+        <input class="form-control" name="department" />
+      </div>
+
+      <div class="panel-body">
+        <button type="submit" class="btn btn-sm btn-primary">Зберегти</button>
+        <a id="reset" class="btn btn-sm btn-primary">Скинути</a>
+      </div>
+      <table class="table table-condensed table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Ім'я</th>
+            <th>Прізвище</th>
+            <th>Вік</th>
+            <th>Курс</th>
+            <th>Середній бал</th>
+            <th>Кафедра</th>
+          </tr>
+        </thead>
+
+        <tbody class="tbody"></tbody>
+      </table>
+    </form>
+
+    <script>
+      const clickSwitchBtn = document.querySelector(".switchButton");
+
+      // Получение всех пользователей
+      async function GetUsers() {
+        // отправляет запрос и получаем ответ
+        const response = await fetch("/api/users", {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }); // если запрос прошел нормально
+        if (response.ok === true) {
+          // получаем данные
+          const users = await response.json();
+          let rows = document.querySelector(".tbody");
+          users.forEach((user) => {
+            // добавляем полученные элементы в таблицу
+            rows.append(row(user));
+          });
+        }
+      } 
+      // Получение одного пользователя
+      async function GetUser(id) {
+        const response = await fetch("/api/users/" + id, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        });
+        if (response.ok === true) {
+          const user = await response.json();
+          const form = document.forms["userForm"];
+          form.elements["id"].value = user._id;
+          form.elements["name"].value = user.name;
+          form.elements["last_name"].value = user.last_name;
+          form.elements["age"].value = user.age;
+          form.elements["course"].value = user.course;
+          form.elements["avg"].value = user.avg;
+          form.elements["department"].value = user.department;
+        }
+      }
+      // Добавление пользователя
+      async function CreateUser(userName, last_name, userAge, course, avg, department) {
+        const response = await fetch("api/users", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: userName,
+            last_name: last_name,
+            age: parseInt(userAge, 10),
+            course: parseInt(course, 10),
+            avg: parseFloat(avg, 10),
+            department:department
+          }),
+        });
+        if (response.ok === true) {
+          const user = await response.json();
+          reset();
+          document.querySelector(".tbody").append(row(user));
+        }
+      } 
+      // Изменение пользователя
+      async function EditUser(userName, last_name, userAge, course, avg, department) {
+        const response = await fetch("api/users", {
+          method: "PUT",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: userId,
+            name: userName,
+            last_name: last_name,
+            age: parseInt(userAge, 10),
+            course: parseInt(course, 4),
+            avg: parseFloat(avg, 12),
+            department:department
+          }),
+        });
+        if (response.ok === true) {
+          const user = await response.json();
+          reset();
+          document
+            .querySelector("tr[data-rowid='" + user._id + "']")
+            .replaceWith(row(user));
+        }
+      } 
+      // Удаление пользователя
+      async function DeleteUser(id) {
+        const response = await fetch("/api/users/" + id, {
+          method: "DELETE",
+          headers: { Accept: "application/json" },
+        });
+        if (response.ok === true) {
+          const user = await response.json();
+          document.querySelector("tr[data-rowid='" + user._id + "']").remove();
+        }
+      } 
+      // сброс формы
+      function reset() {
+        const form = document.forms["userForm"];
+        form.reset();
+        form.elements["id"].value = 0;
+      } 
+      // создание строки для таблицы
+      function row(user) {
+        console.log(user);
+        const tr = document.createElement("tr");
+        tr.setAttribute("data-rowid", user._id);
+        const idTd = document.createElement("td");
+        idTd.append(user._id);
+        tr.append(idTd);
+        const nameTd = document.createElement("td");
+        nameTd.append(user.name);
+        tr.append(nameTd);
+        const lastnameTd = document.createElement("td");
+        lastnameTd.append(user.last_name);
+        tr.append(lastnameTd);
+        const ageTd = document.createElement("td");
+        ageTd.append(user.age);
+        tr.append(ageTd);
+        const courseTd = document.createElement("td");
+        courseTd.append(user.course);
+        tr.append(courseTd);
+        const avgTd = document.createElement("td");
+        avgTd.append(user.avg);
+        tr.append(avgTd);
+        const departmentTd = document.createElement("td");
+        departmentTd.append(user.department);
+        tr.append(departmentTd);
+        const linksTd = document.createElement("td");
+        const editLink = document.createElement("a");
+        editLink.setAttribute("data-id", user._id);
+        editLink.setAttribute("style", "cursor:pointer;padding:15px;");
+        editLink.append("Змінити");
+        editLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          GetUser(user._id);
+        });
+        linksTd.append(editLink);
+        const removeLink = document.createElement("a");
+        removeLink.setAttribute("data-id", user._id);
+        removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
+        removeLink.append("Видалити");
+        removeLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          DeleteUser(user._id);
+        });
+        linksTd.append(removeLink);
+        tr.appendChild(linksTd);
+        return tr;
+      } // сброс значений формы
+      document.getElementById("reset").click(function (e) {
+        e.preventDefault();
+        reset();
+      }); // отправка формы
+      document.forms["userForm"].addEventListener("submit", (e) => {
+        e.preventDefault();
+        const form = document.forms["userForm"];
+        const id = form.elements["id"].value;
+        const name = form.elements["name"].value;
+        const last_name = form.elements["last_name"].value;
+        const age = form.elements["age"].value;
+        const course = form.elements["course"].value;
+        const avg = form.elements["avg"].value;
+        const department = form.elements["department"].value;
+
+        if (id == 0) CreateUser(name, last_name, age, course, avg, department);
+        else EditUser(id, name, last_name, age, course, avg, department);
+      }); // загрузка пользователей
+      GetUsers();
+    </script>
+  </body>
+</html>
